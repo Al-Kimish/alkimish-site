@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AL-KIMISH</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0b0d;
+    --bg-card: #151318;
+    --gold-deep: #a9822c;
+    --gold-bright: #e3c576;
+    --text: #ede8da;
+    --text-muted: #8a8577;
+    --line: #2a2822;
+    --danger: #8a2e2e;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    line-height: 1.5;
+  }
+
+  a { color: inherit; text-decoration: none; }
+
+  /* --- Header --- */
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 28px;
+    border-bottom: 1px solid var(--line);
+    position: sticky;
+    top: 0;
+    background: rgba(11,11,13,0.92);
+    backdrop-filter: blur(6px);
+    z-index: 10;
+  }
+
+  .wordmark {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    font-size: 1.4rem;
+    letter-spacing: 0.14em;
+    color: var(--gold-bright);
+  }
+
+  .wordmark span {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    letter-spacing: 0.3em;
+    display: block;
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    margin-top: 2px;
+  }
+
+  #cart-toggle {
+    background: none;
+    border: 1px solid var(--gold-deep);
+    color: var(--gold-bright);
+    padding: 10px 18px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+
+  #cart-toggle:active { background: var(--gold-deep); color: var(--bg); }
+
+  /* --- Hero --- */
+  .hero {
+    text-align: center;
+    padding: 64px 24px 48px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .glyph {
+    width: 56px;
+    height: 56px;
+    margin: 0 auto 20px;
+    opacity: 0.85;
+  }
+
+  .hero h1 {
+    font-family: 'Cinzel', serif;
+    font-weight: 600;
+    font-size: 1.9rem;
+    color: var(--text);
+    letter-spacing: 0.05em;
+    max-width: 480px;
+    margin: 0 auto 14px;
+  }
+
+  .hero p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+
+  /* --- Product grid --- */
+  main { padding: 40px 20px 100px; max-width: 960px; margin: 0 auto; }
+
+  .section-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+    border-left: 2px solid var(--gold-deep);
+    padding-left: 10px;
+  }
+
+  #product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+  }
+
+  .product-card {
+    background: var(--bg-card);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .product-img {
+    width: 100%;
+    aspect-ratio: 4/5;
+    background: linear-gradient(135deg, #1c1a20, #0b0b0d);
+    border: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--gold-deep);
+    font-family: 'Cinzel', serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-align: center;
+  }
+
+  .product-name { font-weight: 500; font-size: 0.95rem; }
+  .product-meta { color: var(--text-muted); font-size: 0.8rem; }
+  .product-price { color: var(--gold-bright); font-weight: 600; font-size: 1rem; }
+
+  .add-btn {
+    margin-top: 6px;
+    background: none;
+    border: 1px solid var(--gold-deep);
+    color: var(--text);
+    padding: 9px;
+    font-size: 0.82rem;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .add-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .add-btn:not(:disabled):active { background: var(--gold-deep); color: var(--bg); }
+
+  #empty-state, #loading-state {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 60px 20px;
+    grid-column: 1 / -1;
+    font-size: 0.9rem;
+  }
+
+  /* --- Cart panel --- */
+  #cart-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: none;
+    z-index: 20;
+  }
+
+  #cart-panel {
+    position: fixed;
+    top: 0; right: -380px;
+    width: 340px; max-width: 90vw;
+    height: 100%;
+    background: var(--bg-card);
+    border-left: 1px solid var(--gold-deep);
+    z-index: 21;
+    display: flex;
+    flex-direction: column;
+    transition: right 0.25s ease;
+  }
+
+  #cart-panel.open { right: 0; }
+
+  .cart-header {
+    padding: 20px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .cart-header h2 {
+    font-family: 'Cinzel', serif;
+    font-size: 1.1rem;
+    color: var(--gold-bright);
+  }
+
+  #close-cart {
+    background: none; border: none; color: var(--text-muted);
+    font-size: 1.4rem; cursor: pointer; line-height: 1;
+  }
+
+  #cart-items { flex: 1; overflow-y: auto; padding: 16px 20px; }
+
+  .cart-line {
+    display: flex; justify-content: space-between;
+    padding: 10px 0; border-bottom: 1px solid var(--line);
+    font-size: 0.88rem;
+  }
+
+  .cart-line button {
+    background: none; border: none; color: var(--danger);
+    cursor: pointer; font-size: 0.78rem; margin-left: 8px;
+  }
+
+  #cart-footer { padding: 20px; border-top: 1px solid var(--line); }
+
+  #cart-total { display: flex; justify-content: space-between; margin-bottom: 14px; font-weight: 600; }
+
+  .primary-btn {
+    width: 100%;
+    background: var(--gold-deep);
+    color: var(--bg);
+    border: none;
+    padding: 13px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+
+  .primary-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* --- Modal (login / checkout) --- */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    display: none;
+    align-items: center; justify-content: center;
+    z-index: 30;
+    padding: 20px;
+  }
+
+  .modal {
+    background: var(--bg-card);
+    border: 1px solid var(--gold-deep);
+    padding: 28px;
+    max-width: 380px;
+    width: 100%;
+  }
+
+  .modal h2 {
+    font-family: 'Cinzel', serif;
+    font-size: 1.1rem;
+    color: var(--gold-bright);
+    margin-bottom: 6px;
+  }
+
+  .modal p.sub { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 18px; }
+
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 0.78rem; color: var(--text-muted); margin-bottom: 5px; }
+  .field input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    color: var(--text);
+    padding: 10px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+  }
+  .field input:focus { outline: none; border-color: var(--gold-deep); }
+
+  .modal-error {
+    color: #d97a7a;
+    font-size: 0.82rem;
+    margin-bottom: 12px;
+    display: none;
+  }
+
+  .switch-link {
+    text-align: center;
+    margin-top: 14px;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+  }
+  .switch-link a { color: var(--gold-bright); text-decoration: underline; cursor: pointer; }
+
+  .close-modal {
+    position: absolute; top: 14px; right: 16px;
+    background: none; border: none; color: var(--text-muted);
+    font-size: 1.3rem; cursor: pointer;
+  }
+  .modal { position: relative; }
+
+  #confirmation-content h2 { margin-bottom: 14px; }
+  #confirmation-content p { font-size: 0.9rem; margin-bottom: 10px; color: var(--text); }
+  #confirmation-content .ref {
+    background: var(--bg);
+    border: 1px dashed var(--gold-deep);
+    padding: 12px;
+    font-family: monospace;
+    font-size: 1rem;
+    color: var(--gold-bright);
+    text-align: center;
+    margin: 14px 0;
+  }
+
+  footer {
+    text-align: center;
+    padding: 30px 20px;
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    border-top: 1px solid var(--line);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wordmark">AL-KIMISH<span>STREETWEAR</span></div>
+  <button id="cart-toggle">Panier (<span id="cart-count">0</span>)</button>
+</header>
+
+<div class="hero">
+  <svg class="glyph" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="32" cy="32" r="26" stroke="#a9822c" stroke-width="1.2"/>
+    <path d="M32 12 L44 32 L32 52 L20 32 Z" stroke="#e3c576" stroke-width="1.2"/>
+    <circle cx="32" cy="32" r="4" fill="#e3c576"/>
+  </svg>
+  <h1>La transformation commence ici</h1>
+  <p>Pièces streetwear en édition limitée, forgées entre or et obscurité.</p>
+</div>
+
+<main>
+  <div class="section-label">Collection</div>
+  <div id="product-grid">
+    <div id="loading-state">Chargement de la collection…</div>
+  </div>
+</main>
+
+<footer>© AL-KIMISH — Paiement par Mobile Money à la commande</footer>
+
+<!-- Cart -->
+<div id="cart-overlay"></div>
+<div id="cart-panel">
+  <div class="cart-header">
+    <h2>Ton panier</h2>
+    <button id="close-cart">&times;</button>
+  </div>
+  <div id="cart-items"></div>
+  <div id="cart-footer">
+    <div id="cart-total"><span>Total</span><span id="cart-total-value">0 GNF</span></div>
+    <button class="primary-btn" id="checkout-btn" disabled>Commander</button>
+  </div>
+</div>
+
+<!-- Auth modal -->
+<div class="modal-overlay" id="auth-overlay">
+  <div class="modal">
+    <button class="close-modal" data-close="auth-overlay">&times;</button>
+    <h2 id="auth-title">Connexion</h2>
+    <p class="sub">Connecte-toi pour valider ta commande.</p>
+    <div class="modal-error" id="auth-error"></div>
+    <div class="field" id="name-field" style="display:none;">
+      <label>Nom complet</label>
+      <input type="text" id="auth-nom" placeholder="Ton nom">
+    </div>
+    <div class="field">
+      <label>Email</label>
+      <input type="email" id="auth-email" placeholder="ton@email.com">
+    </div>
+    <div class="field">
+      <label>Mot de passe</label>
+      <input type="password" id="auth-pass" placeholder="••••••••">
+    </div>
+    <button class="primary-btn" id="auth-submit">Se connecter</button>
+    <div class="switch-link" id="auth-switch">
+      Pas encore de compte ? <a id="to-register">Créer un compte</a>
+    </div>
+  </div>
+</div>
+
+<!-- Confirmation modal -->
+<div class="modal-overlay" id="confirm-overlay">
+  <div class="modal">
+    <button class="close-modal" data-close="confirm-overlay">&times;</button>
+    <div id="confirmation-content">
+      <h2>Commande enregistrée</h2>
+      <p>Pour finaliser, envoie <strong id="confirm-amount"></strong> par Mobile Money au numéro :</p>
+      <div class="ref" id="confirm-phone">+224 611 74 14 55</div>
+      <p>Indique ta référence de commande dans le motif du transfert :</p>
+      <div class="ref" id="confirm-order-id"></div>
+      <p style="color:var(--text-muted); font-size:0.8rem;">Ta commande sera confirmée dès réception du paiement. Un membre de l'équipe AL-KIMISH te contactera.</p>
+      <button class="primary-btn" data-close="confirm-overlay" style="margin-top:14px;">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// CONFIGURATION — à adapter
+// ============================================================
+const API_BASE = 'https://alkimish-shop.onrender.com';
+const MOBILE_MONEY_NUMBER = '+224 611 74 14 55';
+
+// ============================================================
+// ÉTAT
+// ============================================================
+let products = [];
+let cart = JSON.parse(localStorage.getItem('alkimish_cart') || '[]');
+let authToken = localStorage.getItem('alkimish_token') || null;
+let authMode = 'login'; // 'login' | 'register'
+
+function saveCart() {
+  localStorage.setItem('alkimish_cart', JSON.stringify(cart));
+  renderCart();
+}
+
+function formatPrice(centimes) {
+  return (centimes / 100).toLocaleString('fr-FR') + ' GNF';
+}
+
+// ============================================================
+// CHARGER LES PRODUITS
+// ============================================================
+async function loadProducts() {
+  const grid = document.getElementById('product-grid');
+  try {
+    const res = await fetch(`${API_BASE}/products`);
+    products = await res.json();
+    if (products.length === 0) {
+      grid.innerHTML = '<div id="empty-state">Aucune pièce disponible pour le moment. Reviens bientôt.</div>';
+      return;
+    }
+    grid.innerHTML = products.map(p => `
+      <div class="product-card">
+        <div class="product-img">${p.nom}</div>
+        <div class="product-name">${p.nom}</div>
+        <div class="product-meta">${[p.taille, p.couleur].filter(Boolean).join(' · ') || '—'}</div>
+        <div class="product-price">${formatPrice(p.prix)}</div>
+        <button class="add-btn" ${p.stock <= 0 ? 'disabled' : ''} onclick="addToCart(${p.id})">
+          ${p.stock <= 0 ? 'Épuisé' : 'Ajouter au panier'}
+        </button>
+      </div>
+    `).join('');
+  } catch (e) {
+    grid.innerHTML = '<div id="empty-state">Impossible de charger la collection. Réessaie plus tard.</div>';
+  }
+}
+
+// ============================================================
+// PANIER
+// ============================================================
+function addToCart(productId) {
+  const existing = cart.find(i => i.product_id === productId);
+  if (existing) existing.quantite += 1;
+  else cart.push({ product_id: productId, quantite: 1 });
+  saveCart();
+  openCart();
+}
+
+function removeFromCart(productId) {
+  cart = cart.filter(i => i.product_id !== productId);
+  saveCart();
+}
+
+function renderCart() {
+  const container = document.getElementById('cart-items');
+  const countEl = document.getElementById('cart-count');
+  const totalEl = document.getElementById('cart-total-value');
+  const checkoutBtn = document.getElementById('checkout-btn');
+
+  countEl.textContent = cart.reduce((sum, i) => sum + i.quantite, 0);
+
+  if (cart.length === 0) {
+    container.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem;">Ton panier est vide.</p>';
+    totalEl.textContent = '0 GNF';
+    checkoutBtn.disabled = true;
+    return;
+  }
+
+  let total = 0;
+  container.innerHTML = cart.map(item => {
+    const product = products.find(p => p.id === item.product_id);
+    if (!product) return '';
+    const lineTotal = product.prix * item.quantite;
+    total += lineTotal;
+    return `
+      <div class="cart-line">
+        <span>${product.nom} × ${item.quantite}</span>
+        <span>${formatPrice(lineTotal)} <button onclick="removeFromCart(${product.id})">retirer</button></span>
+      </div>
+    `;
+  }).join('');
+
+  totalEl.textContent = formatPrice(total);
+  checkoutBtn.disabled = false;
+}
+
+function openCart() {
+  document.getElementById('cart-panel').classList.add('open');
+  document.getElementById('cart-overlay').style.display = 'block';
+}
+function closeCart() {
+  document.getElementById('cart-panel').classList.remove('open');
+  document.getElementById('cart-overlay').style.display = 'none';
+}
+
+document.getElementById('cart-toggle').onclick = openCart;
+document.getElementById('close-cart').onclick = closeCart;
+document.getElementById('cart-overlay').onclick = closeCart;
+
+// ============================================================
+// AUTH (connexion / inscription)
+// ============================================================
+function openAuth() {
+  document.getElementById('auth-overlay').style.display = 'flex';
+}
+function closeModal(id) {
+  document.getElementById(id).style.display = 'none';
+}
+
+document.querySelectorAll('[data-close]').forEach(btn => {
+  btn.onclick = () => closeModal(btn.dataset.close);
+});
+
+document.getElementById('to-register').onclick = () => {
+  authMode = authMode === 'login' ? 'register' : 'login';
+  document.getElementById('auth-title').textContent = authMode === 'login' ? 'Connexion' : 'Créer un compte';
+  document.getElementById('auth-submit').textContent = authMode === 'login' ? 'Se connecter' : "S'inscrire";
+  document.getElementById('name-field').style.display = authMode === 'register' ? 'block' : 'none';
+  document.getElementById('to-register').textContent = authMode === 'login' ? 'Créer un compte' : 'Se connecter';
+  document.getElementById('auth-switch').firstChild.textContent = authMode === 'login' ? "Pas encore de compte ? " : "Déjà un compte ? ";
+  document.getElementById('auth-error').style.display = 'none';
+};
+
+document.getElementById('auth-submit').onclick = async () => {
+  const email = document.getElementById('auth-email').value.trim();
+  const pass = document.getElementById('auth-pass').value;
+  const nom = document.getElementById('auth-nom').value.trim();
+  const errorEl = document.getElementById('auth-error');
+  errorEl.style.display = 'none';
+
+  if (!email || !pass || (authMode === 'register' && !nom)) {
+    errorEl.textContent = 'Merci de remplir tous les champs.';
+    errorEl.style.display = 'block';
+    return;
+  }
+
+  try {
+    if (authMode === 'register') {
+      const res = await fetch(`${API_BASE}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nom, email, mot_de_passe: pass })
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        errorEl.textContent = data.erreur || 'Erreur lors de l\'inscription.';
+        errorEl.style.display = 'block';
+        return;
+      }
+    }
+
+    const loginRes = await fetch(`${API_BASE}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, mot_de_passe: pass })
+    });
+    const loginData = await loginRes.json();
+    if (!loginRes.ok) {
+      errorEl.textContent = loginData.erreur || 'Identifiants invalides.';
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    authToken = loginData.token;
+    localStorage.setItem('alkimish_token', authToken);
+    closeModal('auth-overlay');
+    submitOrder();
+  } catch (e) {
+    errorEl.textContent = 'Erreur de connexion au serveur.';
+    errorEl.style.display = 'block';
+  }
+};
+
+// ============================================================
+// COMMANDE
+// ============================================================
+document.getElementById('checkout-btn').onclick = () => {
+  if (!authToken) {
+    openAuth();
+    return;
+  }
+  submitOrder();
+};
+
+async function submitOrder() {
+  try {
+    const res = await fetch(`${API_BASE}/orders`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`
+      },
+      body: JSON.stringify({ items: cart })
+    });
+    const data = await res.json();
+
+    if (res.status === 401) {
+      authToken = null;
+      localStorage.removeItem('alkimish_token');
+      openAuth();
+      return;
+    }
+
+    if (!res.ok) {
+      alert(data.erreur || 'Erreur lors de la commande.');
+      return;
+    }
+
+    document.getElementById('confirm-amount').textContent = formatPrice(data.total);
+    document.getElementById('confirm-phone').textContent = MOBILE_MONEY_NUMBER;
+    document.getElementById('confirm-order-id').textContent = 'Commande #' + data.id;
+    document.getElementById('confirm-overlay').style.display = 'flex';
+
+    cart = [];
+    saveCart();
+    closeCart();
+    loadProducts(); // rafraîchir le stock affiché
+  } catch (e) {
+    alert('Erreur de connexion au serveur.');
+  }
+}
+
+// ============================================================
+// INIT
+// ============================================================
+loadProducts();
+renderCart();
+</script>
+
+</body>
+</html>
